@@ -12,7 +12,7 @@ pre.withArgs(function(nick, host, port) {
     client.bind({
         message: function(msg) {
             if (typeof msg.command == 'number')
-                sys.puts(msg.params[1]);
+                sys.puts(msg.command.toString() + ': ' + msg.params[1]);
         },
 
         NOTICE: function(msg, target, text)  {
@@ -25,6 +25,14 @@ pre.withArgs(function(nick, host, port) {
 
         PRIVMSG: function(msg, target, text) {
             sys.puts('<' + msg.prefix + '> ' + text);
+        },
+
+        JOIN: function(msg, channel) {
+            sys.puts('You have joined channel ' + channel);
+        },
+
+        PART: function(msg, channel) {
+            sys.puts('You have left channel ' + channel);
         }
     });
 });
