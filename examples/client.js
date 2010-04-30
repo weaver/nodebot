@@ -4,18 +4,12 @@ var sys = require('sys'),
 
 pre.withArgs(function(nick, host, port) {
     var client = irc.connect({
+        nick: nick,
         host: host,
         input: process.openStdin()
     });
 
     client.bind({
-        connect: function() {
-            client
-                .send('PASS', '*')
-                .send('NICK', nick)
-                .send('USER', nick, 8, '*', nick);
-        },
-
         message: function(msg) {
             if (typeof msg.command == 'number')
                 sys.puts(msg.params[1]);
