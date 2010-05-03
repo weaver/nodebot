@@ -1,6 +1,7 @@
 var sys = require('sys'),
     pre = require('../lib/prelude'),
-    irc = require('../lib/irc');
+    irc = require('../lib/irc'),
+    COUNTER = 0;
 
 pre.withArgs(function(nick, host, port) {
     var client = irc.connect({
@@ -12,7 +13,7 @@ pre.withArgs(function(nick, host, port) {
     client.bind({
         message: function(msg) {
             if (typeof msg.command == 'number')
-                sys.puts(msg.command.toString() + ': ' + msg.params[1]);
+                sys.puts(msg.command.toString() + ' ' + msg.params[1]);
         },
 
         NOTICE: function(msg, target, text)  {
