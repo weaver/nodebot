@@ -1,19 +1,34 @@
 var sys = require('sys'),
+    repl = require('repl'),
+    net = require('net'),
     pre = require('../lib/prelude'),
-    irc = require('../lib/irc'),
-    COUNTER = 0;
+    irc = require('../lib/irc');
 
 pre.withArgs(function(nick, host, port) {
     var client = irc.connect({
         nick: nick,
         host: host,
-        input: process.openStdin()
+        input: process.openStdin(),
+        join: ['#nodebot']
     });
 
     client.bind({
+        connect: function() {
+            sys.log('Connected.');
+        },
+
+        reconnect: function() {
+            sys.log('Reconnecting...');
+        },
+
+        disconnect: function() {
+            sys.log('Client disconnected.  Goodbye.');
+            process.exit(0);
+        },
+
         message: function(msg) {
             if (typeof msg.command == 'number')
-                sys.puts(msg.command.toString() + ' ' + msg.params[1]);
+                sys.puts(msg.command.toString() + ' ' + msg.params.slice(1).join(' '));
         },
 
         NOTICE: function(msg, target, text)  {
@@ -26,14 +41,13 @@ pre.withArgs(function(nick, host, port) {
 
         PRIVMSG: function(msg, target, text) {
             sys.puts('<' + msg.prefix + '> ' + text);
-        },
-
-        JOIN: function(msg, channel) {
-            sys.puts('You have joined channel ' + channel);
-        },
-
-        PART: function(msg, channel) {
-            sys.puts('You have left channel ' + channel);
         }
     });
+
+    global.client = client;
+    net.createServer(function(socket) {
+        repl.start('client> ', socket);
+    }).listen(6665);
 });
+
+
