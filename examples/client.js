@@ -9,72 +9,57 @@ pre.withArgs(function(nick, host, port) {
         nick: nick,
         host: host,
         input: process.openStdin(),
-        join: ['#nodebot']
-    });
+        join: ['#nodebot'],
+        // debug: true,
 
-    client.bind({
-        connect: function() {
-            sys.log('Connected.');
-        },
+        bind: {
+            connect: function() {
+                sys.log('Connected.');
+            },
 
-        reconnect: function() {
-            sys.log('Reconnecting...');
-        },
+            reconnect: function() {
+                sys.log('Reconnecting...');
+            },
 
-        disconnect: function() {
-            sys.log('Client disconnected.  Goodbye.');
-            process.exit(0);
-        },
+            disconnect: function() {
+                sys.log('Client disconnected.  Goodbye.');
+                process.exit(0);
+            },
 
-        message: function(msg) {
-            if (typeof msg.command == 'number')
-                sys.puts(msg.command.toString() + ' ' + msg.params.slice(1).join(' '));
-        },
+            message: function(msg) {
+                if (typeof msg.command == 'number')
+                    sys.puts(msg.command.toString() + ' ' + msg.params.slice(1).join(' '));
+            },
 
-        NOTICE: function(msg, target, text)  {
-            sys.puts(text);
-        },
+            NOTICE: function(msg, target, text)  {
+                sys.puts(text);
+            },
 
-        MODE: function(msg, nick, mode) {
-            sys.log('MODE changed for ' + nick + ' to ' + mode);
-        },
+            MODE: function(msg, nick, mode) {
+                sys.log('MODE changed for ' + nick + ' to ' + mode);
+            },
 
-        PRIVMSG: function(msg, target, text) {
-            sys.log('<' + msg.nick + '> ' + text);
-        },
+            PRIVMSG: function(msg, target, text) {
+                sys.log('<' + msg.nick + '> ' + text);
+            },
 
-        JOIN: function(msg, channel) {
-            activity(client, msg, 'joined ' + channel);
-        },
+            JOIN: function(msg, channel) {
+                activity(this, msg, 'joined ' + channel);
+            },
 
-        PART: function(msg, channel) {
-            activity(client, msg, 'left ' + channel);
-        },
+            PART: function(msg, channel) {
+                activity(this, msg, 'left ' + channel);
+            },
 
-        QUIT: function(msg, reason) {
-            activity(client, msg, 'quit, ' + reason);
+            QUIT: function(msg, reason) {
+                activity(this, msg, 'quit, ' + reason);
+            }
         }
     });
 
     function activity(client, msg, action) {
         var who = client.isMine(msg) ? 'You have ' : msg.nick + ' has ';
-        log(who + action);
-    }
-
-    function log(msg) {
-        sys.puts('[' + timestamp() + '] ' + msg);
-    }
-
-    function pad (n) {
-        return n < 10 ? '0' + n.toString(10) : n.toString(10);
-    }
-
-    function timestamp() {
-        var now = new Date();
-        return [
-            [now.getFullYear(), pad(now.getMonth()), pad(now.getDay())].join('.'),
-            [pad(now.getHours()), pad(now.getMinutes()), pad(now.getSeconds())].join(':')
-        ].join(' ');
+        sys.log(who + action);
     }
 
     global.client = client;
