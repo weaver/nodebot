@@ -5,14 +5,12 @@ var sys = require('sys'),
     irc = require('../lib/irc');
 
 pre.withArgs(function(nick, host, port) {
-    var client = irc.connect({
+    var client = irc.client({
         nick: nick,
         host: host,
-        input: process.openStdin(),
         join: ['#nodebot'],
-        // debug: true,
 
-        bind: {
+        ready: {
             connect: function() {
                 sys.log('Connected.');
             },
@@ -21,7 +19,7 @@ pre.withArgs(function(nick, host, port) {
                 sys.log('Reconnecting...');
             },
 
-            disconnect: function() {
+            close: function() {
                 sys.log('Client disconnected.  Goodbye.');
                 process.exit(0);
             },
@@ -31,16 +29,20 @@ pre.withArgs(function(nick, host, port) {
                     sys.puts(msg.command.toString() + ' ' + msg.params.slice(1).join(' '));
             },
 
+            privmsg: function(msg, target, text) {
+                sys.log('<' + msg.nick + '> ' + text);
+            },
+
+            action: function(msg, target, text) {
+                sys.log('* ' + msg.nick + ' ' + text);
+            },
+
             NOTICE: function(msg, target, text)  {
                 sys.puts(text);
             },
 
             MODE: function(msg, nick, mode) {
                 sys.log('MODE changed for ' + nick + ' to ' + mode);
-            },
-
-            PRIVMSG: function(msg, target, text) {
-                sys.log('<' + msg.nick + '> ' + text);
             },
 
             JOIN: function(msg, channel) {
@@ -62,10 +64,18 @@ pre.withArgs(function(nick, host, port) {
         sys.log(who + action);
     }
 
+    // Run a REPL on a local port to allow the client to be controlled
+    // externally; export the client into the global namespace.
     global.client = client;
     net.createServer(function(socket) {
         repl.start('client> ', socket);
     }).listen(6665);
+
+
+    // Users type in an exact IRC message that's sent to the server.
+    process.openStdin().bind('data', function(chunk) {
+        client.write(chunk.toString().replace(/\n/, "\r\n"));
+    });
 });
 
 
